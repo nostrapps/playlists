@@ -1,0 +1,2 @@
+# playlists
+nostr playlists
