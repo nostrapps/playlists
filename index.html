@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎵 Nostr Playlists - Discover Music on the Decentralized Web</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+        color: white;
+      }
+
+      .header h1 {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .create-playlist-btn {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .create-playlist-btn:hover {
+        text-decoration: none;
+      }
+
+      .status {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        backdrop-filter: blur(10px);
+      }
+
+      .playlists-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+        margin-top: 20px;
+      }
+
+      .playlist-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .playlist-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .playlist-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .playlist-icon {
+        font-size: 2rem;
+        margin-right: 15px;
+      }
+
+      .playlist-info h3 {
+        color: #333;
+        margin-bottom: 5px;
+        font-size: 1.3rem;
+      }
+
+      .playlist-meta {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .d-tag {
+        color: #667eea;
+        font-weight: 500;
+        font-size: 0.85rem;
+      }
+
+      .pubkey {
+        color: #764ba2;
+        font-weight: 500;
+        font-size: 0.85rem;
+        font-family: 'Courier New', monospace;
+      }
+
+      .pubkey-link {
+        color: #764ba2;
+        font-weight: 500;
+        font-size: 0.85rem;
+        font-family: 'Courier New', monospace;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-block;
+      }
+
+      .pubkey-link:hover {
+        color: #5a3a7a;
+        transform: translateX(2px);
+      }
+
+      .pubkey-link .pubkey {
+        color: inherit;
+        font-weight: inherit;
+        font-size: inherit;
+        font-family: inherit;
+      }
+
+      .tracks-list {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .track-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+
+      .track-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+      }
+
+      .track-thumbnail {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        margin-right: 15px;
+        object-fit: cover;
+        background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnR3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNjY3ZWVhO3N0b3Atb3BhY2l0eToxIiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiM3NjRiYTI7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJub3RlR3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZmZmZmZmO3N0b3Atb3BhY2l0eTowLjkiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2ZmZmZmZjtzdG9wLW9wYWNpdHk6MC43IiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSIxNSIgZmlsbD0idXJsKCNiZ0dyYWRpZW50KSIvPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjMwIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+CiAgPGNpcmNsZSBjeD0iMTUwIiBjeT0iMTUwIiByPSI0MCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIvPgogIDxjaXJjbGUgY3g9IjE3MCIgY3k9IjMwIiByPSIyMCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA0KSIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwxMDApIj4KICAgIDxyZWN0IHg9IjI1IiB5PSItNDAiIHdpZHRoPSI0IiBoZWlnaHQ9IjUwIiBmaWxsPSJ1cmwoI25vdGVHcmFkaWVudCkiIHJ4PSIyIi8+CiAgICA8ZWxsaXBzZSBjeD0iMjAiIGN5PSIxMCIgcng9IjEyIiByeT0iOCIgZmlsbD0idXJsKCNub3RlR3JhZGllbnQpIiB0cmFuc2Zvcm09InJvdGF0ZSgtMjApIi8+CiAgICA8cGF0aCBkPSJNMjkgLTQwIFE0NSAtMzUgNDUgLTIwIFE0NSAtMTAgMjkgLTE1IFoiIGZpbGw9InVybCgjbm90ZUdyYWRpZW50KSIvPgogIDwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2MCwxNDApIj4KICAgIDxyZWN0IHg9IjgiIHk9Ii0xNSIgd2lkdGg9IjIiIGhlaWdodD0iMjAiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC42KSIgcng9IjEiLz4KICAgIDxlbGxpcHNlIGN4PSI2IiBjeT0iNSIgcng9IjQiIHJ5PSIzIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuNikiIHRyYW5zZm9ybT0icm90YXRlKC0yMCkiLz4KICA8L2c+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQwLDYwKSI+CiAgICA8cmVjdCB4PSI4IiB5PSItMTUiIHdpZHRoPSIyIiBoZWlnaHQ9IjIwIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuNSkiIHJ4PSIxIi8+CiAgICA8ZWxsaXBzZSBjeD0iNiIgY3k9IjUiIHJ4PSI0IiByeT0iMyIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjUpIiB0cmFuc2Zvcm09InJvdGF0ZSgtMjApIi8+CiAgPC9nPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDMwLDEwMCkiIG9wYWNpdHk9IjAuMyI+CiAgICA8cGF0aCBkPSJNMCAwIFExMCAtMTAgMjAgMCBRMzAgMTAgNDAgMCIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuNikiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPgogICAgPHBhdGggZD0iTTAgOCBRMTAgLTIgMjAgOCBRMzAgMTggNDAgOCIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuNCkiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIvPgogIDwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjAsMTYwKSIgb3BhY2l0eT0iMC40Ij4KICAgIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSIyIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuOCkiIHJ4PSIxIi8+CiAgICA8cmVjdCB4PSIwIiB5PSI1IiB3aWR0aD0iMTUiIGhlaWdodD0iMiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjYpIiByeD0iMSIvPgogICAgPHJlY3QgeD0iMCIgeT0iMTAiIHdpZHRoPSIxOCIgaGVpZ2h0PSIyIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuNykiIHJ4PSIxIi8+CiAgICA8cmVjdCB4PSIwIiB5PSIxNSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjIiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC41KSIgcng9IjEiLz4KICA8L2c+Cjwvc3ZnPg==')
+          center/cover no-repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .track-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+      }
+
+      .track-thumbnail img.error {
+        display: none;
+      }
+
+      .track-info {
+        flex: 1;
+      }
+
+      .track-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 3px;
+      }
+
+      .track-group {
+        color: #666;
+        font-size: 0.85rem;
+      }
+
+      .play-btn {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .play-btn:hover {
+        transform: scale(1.1);
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: white;
+      }
+
+      .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 4px solid white;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error {
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin: 20px 0;
+        text-align: center;
+      }
+
+      .relay-status {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .relay-indicator {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        backdrop-filter: blur(10px);
+      }
+
+      .relay-connected {
+        background: rgba(40, 167, 69, 0.8);
+      }
+
+      .relay-disconnected {
+        background: rgba(220, 53, 69, 0.8);
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .playlists-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .controls {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎵 Nostr Playlists</h1>
+        <p>Discover decentralized music playlists from the Nostr network</p>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="fetchBtn">🔄 Fetch Latest Playlists</button>
+        <button class="btn" id="clearBtn">🗑️ Clear Playlists</button>
+        <a
+          href="https://mp3url.org/create.html"
+          target="_blank"
+          class="btn create-playlist-btn"
+        >
+          ➕ Create Playlist
+        </a>
+      </div>
+
+      <div class="relay-status" id="relayStatus"></div>
+
+      <div class="status" id="status">
+        Click "Fetch Latest Playlists" to discover music from the Nostr network
+      </div>
+
+      <div class="playlists-grid" id="playlistsGrid"></div>
+    </div>
+
+    <script>
+      class NostrPlaylistApp {
+        constructor() {
+          this.relays = [
+            'wss://relay.damus.io',
+            'wss://nos.lol',
+            'wss://relay.nostr.band',
+            'wss://nostr-pub.wellorder.net'
+          ]
+          this.connections = new Map()
+          this.playlists = new Map()
+          this.subscriptionId = 'playlist-sub-' + Date.now()
+
+          this.initializeElements()
+          this.bindEvents()
+          this.updateRelayStatus()
+
+          // Auto-fetch playlists on startup
+          setTimeout(() => this.fetchPlaylists(), 500)
+        }
+
+        initializeElements() {
+          this.fetchBtn = document.getElementById('fetchBtn')
+          this.clearBtn = document.getElementById('clearBtn')
+          this.status = document.getElementById('status')
+          this.playlistsGrid = document.getElementById('playlistsGrid')
+          this.relayStatus = document.getElementById('relayStatus')
+        }
+
+        bindEvents() {
+          this.fetchBtn.addEventListener('click', () => this.fetchPlaylists())
+          this.clearBtn.addEventListener('click', () => this.clearPlaylists())
+        }
+
+        updateRelayStatus() {
+          this.relayStatus.innerHTML = this.relays
+            .map(relay => {
+              const isConnected =
+                this.connections.has(relay) &&
+                this.connections.get(relay).readyState === WebSocket.OPEN
+              return `<div class="relay-indicator ${
+                isConnected ? 'relay-connected' : 'relay-disconnected'
+              }">
+                        ${relay.replace('wss://', '')} ${
+                isConnected ? '🟢' : '🔴'
+              }
+                    </div>`
+            })
+            .join('')
+        }
+
+        async fetchPlaylists() {
+          this.fetchBtn.disabled = true
+          this.showLoading()
+          this.playlists.clear()
+
+          try {
+            await this.connectToRelays()
+            this.subscribeToPlaylists()
+          } catch (error) {
+            this.showError(
+              'Failed to connect to Nostr relays: ' + error.message
+            )
+            this.fetchBtn.disabled = false
+          }
+        }
+
+        async connectToRelays() {
+          const connectionPromises = this.relays.map(relay =>
+            this.connectToRelay(relay)
+          )
+          await Promise.allSettled(connectionPromises)
+          this.updateRelayStatus()
+        }
+
+        connectToRelay(relayUrl) {
+          return new Promise((resolve, reject) => {
+            try {
+              const ws = new WebSocket(relayUrl)
+
+              ws.onopen = () => {
+                console.log(`Connected to ${relayUrl}`)
+                this.connections.set(relayUrl, ws)
+                this.updateRelayStatus()
+                resolve(ws)
+              }
+
+              ws.onmessage = event => {
+                this.handleMessage(JSON.parse(event.data))
+              }
+
+              ws.onerror = error => {
+                console.error(`Error connecting to ${relayUrl}:`, error)
+                reject(error)
+              }
+
+              ws.onclose = () => {
+                console.log(`Disconnected from ${relayUrl}`)
+                this.connections.delete(relayUrl)
+                this.updateRelayStatus()
+              }
+
+              // Timeout after 5 seconds
+              setTimeout(() => {
+                if (ws.readyState !== WebSocket.OPEN) {
+                  ws.close()
+                  reject(new Error(`Timeout connecting to ${relayUrl}`))
+                }
+              }, 5000)
+            } catch (error) {
+              reject(error)
+            }
+          })
+        }
+
+        subscribeToPlaylists() {
+          const subscription = [
+            'REQ',
+            this.subscriptionId,
+            {
+              kinds: [32100],
+              limit: 50
+            }
+          ]
+
+          this.connections.forEach((ws, relay) => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify(subscription))
+              console.log(`Sent subscription to ${relay}`)
+            }
+          })
+
+          // Auto-close subscription after 10 seconds
+          setTimeout(() => {
+            this.closeSubscription()
+          }, 10000)
+        }
+
+        closeSubscription() {
+          const closeMsg = ['CLOSE', this.subscriptionId]
+          this.connections.forEach(ws => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify(closeMsg))
+            }
+          })
+
+          this.fetchBtn.disabled = false
+          this.updateStatus()
+        }
+
+        handleMessage(message) {
+          const [type, subId, event] = message
+
+          if (type === 'EVENT' && subId === this.subscriptionId) {
+            this.processPlaylistEvent(event)
+          } else if (type === 'EOSE') {
+            console.log('End of stored events received')
+          }
+        }
+
+        processPlaylistEvent(event) {
+          if (event.kind === 32100 && event.content) {
+            const playlistId = event.id
+
+            if (!this.playlists.has(playlistId)) {
+              const playlist = this.parseM3UPlaylist(event.content, event)
+              if (playlist.tracks.length > 0) {
+                this.playlists.set(playlistId, playlist)
+                this.renderPlaylist(playlist)
+                this.updateStatus()
+              }
+            }
+          }
+        }
+
+        parseM3UPlaylist(content, event) {
+          const lines = content.split('\n').filter(line => line.trim())
+          const tracks = []
+          let currentTrack = {}
+
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim()
+
+            if (line.startsWith('#EXTINF:')) {
+              // Parse track info
+              const match = line.match(
+                /#EXTINF:(-?\d+)(?:\s+tvg-logo="([^"]*)")?(?:\s+group-title="([^"]*)")?,(.+)/
+              )
+              if (match) {
+                currentTrack = {
+                  duration: match[1],
+                  logo: match[2] || '',
+                  group: match[3] || 'Unknown',
+                  title: match[4] || 'Unknown Track'
+                }
+              }
+            } else if (line.startsWith('http')) {
+              // This is the URL for the current track
+              if (currentTrack.title) {
+                currentTrack.url = line
+                tracks.push({ ...currentTrack })
+                currentTrack = {}
+              }
+            }
+          }
+
+          // Get playlist name and d tag from tags
+          const dTag = event.tags.find(tag => tag[0] === 'd')
+          const altTag = event.tags.find(tag => tag[0] === 'alt')
+          const playlistName = altTag
+            ? altTag[1]
+            : dTag
+            ? dTag[1]
+            : 'Unnamed Playlist'
+
+          return {
+            id: event.id,
+            name: playlistName,
+            dTag: dTag ? dTag[1] : null,
+            pubkey: event.pubkey,
+            created_at: event.created_at,
+            tracks: tracks
+          }
+        }
+
+        renderPlaylist(playlist) {
+          const playlistCard = document.createElement('div')
+          playlistCard.className = 'playlist-card'
+
+          // Create shortened pubkey (first 8 and last 4 characters)
+          const shortPubkey =
+            playlist.pubkey.slice(0, 8) + '...' + playlist.pubkey.slice(-4)
+
+          playlistCard.innerHTML = `
+                    <div class="playlist-header">
+                        <div class="playlist-icon">🎵</div>
+                        <div class="playlist-info">
+                            <h3>${this.escapeHtml(playlist.name)}</h3>
+                            <div class="playlist-meta">
+                                ${playlist.tracks.length} tracks • ${new Date(
+            playlist.created_at * 1000
+          ).toLocaleDateString()}
+                                ${
+                                  playlist.dTag
+                                    ? `<br><span class="d-tag">🏷️ ${this.escapeHtml(
+                                        playlist.dTag
+                                      )}</span>`
+                                    : ''
+                                }
+                                <br><a href="https://nostr.rocks/users/${
+                                  playlist.pubkey
+                                }" target="_blank" class="pubkey-link">
+                                    <span class="pubkey">👤 ${shortPubkey}</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tracks-list">
+                        ${playlist.tracks
+                          .map(
+                            (track, index) => `
+                            <div class="track-item" onclick="app.playTrack('${
+                              track.url
+                            }', '${this.escapeHtml(track.title)}')">
+                                <div class="track-thumbnail">
+                                    ${
+                                      track.logo
+                                        ? `<img src="${
+                                            track.logo
+                                          }" alt="${this.escapeHtml(
+                                            track.title
+                                          )}" onerror="this.classList.add('error')">`
+                                        : ''
+                                    }
+                                </div>
+                                <div class="track-info">
+                                    <div class="track-title">${this.escapeHtml(
+                                      track.title
+                                    )}</div>
+                                    <div class="track-group">${this.escapeHtml(
+                                      track.group
+                                    )}</div>
+                                </div>
+                                <button class="play-btn" onclick="event.stopPropagation(); app.playTrack('${
+                                  track.url
+                                }', '${this.escapeHtml(track.title)}')">
+                                    ▶️
+                                </button>
+                            </div>
+                        `
+                          )
+                          .join('')}
+                    </div>
+                `
+
+          this.playlistsGrid.appendChild(playlistCard)
+        }
+
+        playTrack(url, title) {
+          // Create a simple audio player or open in new tab
+          if (url.includes('.mp4') || url.includes('video')) {
+            // For video files, open in new tab
+            window.open(url, '_blank')
+          } else {
+            // For audio files, try to play inline
+            const audio = new Audio(url)
+            audio.play().catch(error => {
+              console.error('Error playing audio:', error)
+              // Fallback to opening in new tab
+              window.open(url, '_blank')
+            })
+          }
+
+          this.showStatus(`🎵 Playing: ${title}`)
+        }
+
+        clearPlaylists() {
+          this.playlists.clear()
+          this.playlistsGrid.innerHTML = ''
+          this.showStatus('Playlists cleared')
+        }
+
+        showLoading() {
+          this.status.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div>Fetching playlists from Nostr relays...</div>
+                    </div>
+                `
+        }
+
+        showError(message) {
+          this.status.innerHTML = `<div class="error">❌ ${message}</div>`
+        }
+
+        showStatus(message) {
+          this.status.innerHTML = message
+        }
+
+        updateStatus() {
+          const count = this.playlists.size
+          if (count === 0) {
+            this.showStatus(
+              'No playlists found. Try fetching again or check relay connections.'
+            )
+          } else {
+            this.showStatus(
+              `🎉 Found ${count} playlist${
+                count !== 1 ? 's' : ''
+              } from the Nostr network!`
+            )
+          }
+        }
+
+        escapeHtml(text) {
+          const div = document.createElement('div')
+          div.textContent = text
+          return div.innerHTML
+        }
+      }
+
+      // Initialize the app
+      const app = new NostrPlaylistApp()
+    </script>
+  </body>
+</html>
