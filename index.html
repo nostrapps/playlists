@@ -259,6 +259,29 @@
         transform: scale(1.1);
       }
 
+      .download-btn {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.9rem;
+        margin-top: 15px;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .download-btn:hover {
+        background: linear-gradient(45deg, #218838, #1ea183);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+      }
+
       .loading {
         text-align: center;
         padding: 40px;
@@ -655,6 +678,9 @@
                           )
                           .join('')}
                     </div>
+                    <button class="download-btn" onclick="app.downloadM3U(app.playlists.get('${playlist.id}'))">
+                        📥 Download .m3u
+                    </button>
                 `
 
           this.playlistsGrid.appendChild(playlistCard)
@@ -720,6 +746,42 @@
           const div = document.createElement('div')
           div.textContent = text
           return div.innerHTML
+        }
+
+        generateM3UFile(playlist) {
+          let m3uContent = '#EXTM3U\n'
+          m3uContent += `# Playlist: ${playlist.name}\n`
+          m3uContent += `# Created: ${new Date(playlist.created_at * 1000).toISOString()}\n`
+          if (playlist.dTag) {
+            m3uContent += `# Tag: ${playlist.dTag}\n`
+          }
+          m3uContent += `# Author: ${playlist.pubkey}\n\n`
+
+          playlist.tracks.forEach(track => {
+            const extinf = `#EXTINF:${track.duration || -1}`
+            const tvgLogo = track.logo ? ` tvg-logo="${track.logo}"` : ''
+            const groupTitle = track.group ? ` group-title="${track.group}"` : ''
+            m3uContent += `${extinf}${tvgLogo}${groupTitle},${track.title}\n`
+            m3uContent += `${track.url}\n`
+          })
+
+          return m3uContent
+        }
+
+        downloadM3U(playlist) {
+          const m3uContent = this.generateM3UFile(playlist)
+          const blob = new Blob([m3uContent], { type: 'audio/x-mpegurl' })
+          const url = URL.createObjectURL(blob)
+          
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `${playlist.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.m3u`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+          
+          this.showStatus(`📥 Downloaded: ${playlist.name}.m3u`)
         }
       }
 
