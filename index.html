@@ -282,6 +282,169 @@
         box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
       }
 
+      .edit-btn {
+        background: linear-gradient(45deg, #fd7e14, #e76500);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.9rem;
+        margin-top: 10px;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .edit-btn:hover {
+        background: linear-gradient(45deg, #e76500, #d15400);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
+      }
+
+      .edit-btn.active {
+        background: linear-gradient(45deg, #dc3545, #c82333);
+      }
+
+      .edit-btn.active:hover {
+        background: linear-gradient(45deg, #c82333, #b21e2d);
+      }
+
+      .playlist-card.edit-mode {
+        border: 2px solid #fd7e14;
+        box-shadow: 0 0 20px rgba(253, 126, 20, 0.2);
+      }
+
+      .edit-controls {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px solid #f0f0f0;
+        display: none;
+      }
+
+      .edit-controls.active {
+        display: block;
+      }
+
+      .edit-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+      }
+
+      .edit-input:focus {
+        outline: none;
+        border-color: #fd7e14;
+        box-shadow: 0 0 0 2px rgba(253, 126, 20, 0.2);
+      }
+
+      .track-item.edit-mode {
+        position: relative;
+        padding-left: 50px;
+      }
+
+      .track-controls {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .track-control-btn {
+        background: rgba(253, 126, 20, 0.8);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+
+      .track-control-btn:hover {
+        background: rgba(253, 126, 20, 1);
+        transform: scale(1.1);
+      }
+
+      .track-control-btn.remove {
+        background: rgba(220, 53, 69, 0.8);
+      }
+
+      .track-control-btn.remove:hover {
+        background: rgba(220, 53, 69, 1);
+      }
+
+      .add-track-section {
+        margin-top: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: none;
+      }
+
+      .add-track-section.active {
+        display: block;
+      }
+
+      .add-track-btn {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        margin-top: 10px;
+        width: 100%;
+      }
+
+      .edit-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .edit-actions button {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+      }
+
+      .save-draft-btn {
+        background: #6c757d;
+        color: white;
+      }
+
+      .save-draft-btn:hover {
+        background: #5a6268;
+      }
+
+      .export-btn {
+        background: #17a2b8;
+        color: white;
+      }
+
+      .export-btn:hover {
+        background: #138496;
+      }
+
       .loading {
         text-align: center;
         padding: 40px;
@@ -396,11 +559,13 @@
           ]
           this.connections = new Map()
           this.playlists = new Map()
+          this.editedPlaylists = new Map()
           this.subscriptionId = 'playlist-sub-' + Date.now()
 
           this.initializeElements()
           this.bindEvents()
           this.updateRelayStatus()
+          this.loadDrafts()
 
           // Auto-fetch playlists on startup
           setTimeout(() => this.fetchPlaylists(), 500)
@@ -610,9 +775,10 @@
           }
         }
 
-        renderPlaylist(playlist) {
+        renderPlaylist(playlist, isEdited = false) {
           const playlistCard = document.createElement('div')
           playlistCard.className = 'playlist-card'
+          playlistCard.setAttribute('data-playlist-id', playlist.id)
 
           // Create shortened pubkey (first 8 and last 4 characters)
           const shortPubkey =
@@ -649,6 +815,11 @@
                             <div class="track-item" onclick="app.playTrack('${
                               track.url
                             }', '${this.escapeHtml(track.title)}')">
+                                <div class="track-controls">
+                                    <button class="track-control-btn" onclick="event.stopPropagation(); app.moveTrack('${playlist.id}', ${index}, ${Math.max(0, index - 1)})" title="Move Up">⬆</button>
+                                    <button class="track-control-btn" onclick="event.stopPropagation(); app.moveTrack('${playlist.id}', ${index}, ${Math.min(playlist.tracks.length - 1, index + 1)})" title="Move Down">⬇</button>
+                                    <button class="track-control-btn remove" onclick="event.stopPropagation(); app.removeTrack('${playlist.id}', ${index})" title="Remove">❌</button>
+                                </div>
                                 <div class="track-thumbnail">
                                     ${
                                       track.logo
@@ -678,8 +849,31 @@
                           )
                           .join('')}
                     </div>
-                    <button class="download-btn" onclick="app.downloadM3U(app.playlists.get('${playlist.id}'))">
+                    <div class="edit-controls">
+                        <label>Playlist Name:</label>
+                        <input type="text" class="edit-input edit-name-input" value="${this.escapeHtml(playlist.name)}" onchange="app.updatePlaylistMetadata('${playlist.id}', 'name', this.value)">
+                        
+                        <label>Playlist Tag:</label>
+                        <input type="text" class="edit-input edit-dtag-input" value="${this.escapeHtml(playlist.dTag || '')}" onchange="app.updatePlaylistMetadata('${playlist.id}', 'dTag', this.value)">
+                        
+                        <div class="add-track-section">
+                            <label>Add New Track:</label>
+                            <input type="text" class="edit-input track-title-input" placeholder="Track Title" id="title-${playlist.id}">
+                            <input type="text" class="edit-input track-url-input" placeholder="Track URL" id="url-${playlist.id}">
+                            <input type="text" class="edit-input track-group-input" placeholder="Group/Artist" id="group-${playlist.id}">
+                            <button class="add-track-btn" onclick="app.addNewTrack('${playlist.id}')">➕ Add Track</button>
+                        </div>
+                        
+                        <div class="edit-actions">
+                            <button class="save-draft-btn" onclick="app.saveDrafts(); app.showStatus('💾 Draft saved!')">💾 Save Draft</button>
+                            <button class="export-btn" onclick="app.exportEditedPlaylist('${playlist.id}')">📤 Export M3U</button>
+                        </div>
+                    </div>
+                    <button class="download-btn" onclick="app.downloadM3U(${isEdited ? 'app.editedPlaylists' : 'app.playlists'}.get('${playlist.id}'))">
                         📥 Download .m3u
+                    </button>
+                    <button class="edit-btn" onclick="app.toggleEditMode('${playlist.id}')">
+                        ✏️ Edit Playlist
                     </button>
                 `
 
@@ -755,7 +949,14 @@
           if (playlist.dTag) {
             m3uContent += `# Tag: ${playlist.dTag}\n`
           }
-          m3uContent += `# Author: ${playlist.pubkey}\n\n`
+          m3uContent += `# Original Author: ${playlist.pubkey}\n`
+          
+          // Add edited note if it's an edited playlist
+          if (this.editedPlaylists.has(playlist.id)) {
+            m3uContent += `# Edited with Nostr Playlists (nostrapps.github.io/playlists)\n`
+            m3uContent += `# Last Modified: ${new Date().toISOString()}\n`
+          }
+          m3uContent += '\n'
 
           playlist.tracks.forEach(track => {
             const extinf = `#EXTINF:${track.duration || -1}`
@@ -782,6 +983,176 @@
           URL.revokeObjectURL(url)
           
           this.showStatus(`📥 Downloaded: ${playlist.name}.m3u`)
+        }
+
+        loadDrafts() {
+          try {
+            const drafts = localStorage.getItem('playlist-drafts')
+            if (drafts) {
+              const parsedDrafts = JSON.parse(drafts)
+              for (const [id, playlist] of Object.entries(parsedDrafts)) {
+                this.editedPlaylists.set(id, playlist)
+              }
+            }
+          } catch (error) {
+            console.error('Error loading drafts:', error)
+          }
+        }
+
+        saveDrafts() {
+          try {
+            const draftsObj = {}
+            for (const [id, playlist] of this.editedPlaylists.entries()) {
+              draftsObj[id] = playlist
+            }
+            localStorage.setItem('playlist-drafts', JSON.stringify(draftsObj))
+          } catch (error) {
+            console.error('Error saving drafts:', error)
+          }
+        }
+
+        toggleEditMode(playlistId) {
+          const card = document.querySelector(`[data-playlist-id="${playlistId}"]`)
+          const editBtn = card.querySelector('.edit-btn')
+          const editControls = card.querySelector('.edit-controls')
+          const addTrackSection = card.querySelector('.add-track-section')
+          const trackItems = card.querySelectorAll('.track-item')
+          
+          const isEditing = card.classList.contains('edit-mode')
+          
+          if (isEditing) {
+            // Exit edit mode
+            card.classList.remove('edit-mode')
+            editBtn.classList.remove('active')
+            editBtn.innerHTML = '✏️ Edit Playlist'
+            editControls.classList.remove('active')
+            if (addTrackSection) addTrackSection.classList.remove('active')
+            trackItems.forEach(item => item.classList.remove('edit-mode'))
+          } else {
+            // Enter edit mode
+            card.classList.add('edit-mode')
+            editBtn.classList.add('active')
+            editBtn.innerHTML = '❌ Cancel Edit'
+            editControls.classList.add('active')
+            if (addTrackSection) addTrackSection.classList.add('active')
+            trackItems.forEach(item => item.classList.add('edit-mode'))
+            
+            // Load or create draft
+            if (!this.editedPlaylists.has(playlistId)) {
+              const originalPlaylist = this.playlists.get(playlistId)
+              this.editedPlaylists.set(playlistId, JSON.parse(JSON.stringify(originalPlaylist)))
+            }
+            
+            this.updateEditForm(playlistId)
+          }
+        }
+
+        updateEditForm(playlistId) {
+          const card = document.querySelector(`[data-playlist-id="${playlistId}"]`)
+          const editedPlaylist = this.editedPlaylists.get(playlistId)
+          
+          const nameInput = card.querySelector('.edit-name-input')
+          const dTagInput = card.querySelector('.edit-dtag-input')
+          
+          if (nameInput) nameInput.value = editedPlaylist.name
+          if (dTagInput) dTagInput.value = editedPlaylist.dTag || ''
+        }
+
+        updatePlaylistMetadata(playlistId, field, value) {
+          const editedPlaylist = this.editedPlaylists.get(playlistId)
+          if (editedPlaylist) {
+            editedPlaylist[field] = value
+            this.saveDrafts()
+          }
+        }
+
+        removeTrack(playlistId, trackIndex) {
+          const editedPlaylist = this.editedPlaylists.get(playlistId)
+          if (editedPlaylist && editedPlaylist.tracks[trackIndex]) {
+            editedPlaylist.tracks.splice(trackIndex, 1)
+            this.saveDrafts()
+            this.rerenderPlaylistCard(playlistId)
+          }
+        }
+
+        moveTrack(playlistId, fromIndex, toIndex) {
+          const editedPlaylist = this.editedPlaylists.get(playlistId)
+          if (editedPlaylist && editedPlaylist.tracks[fromIndex]) {
+            const track = editedPlaylist.tracks.splice(fromIndex, 1)[0]
+            editedPlaylist.tracks.splice(toIndex, 0, track)
+            this.saveDrafts()
+            this.rerenderPlaylistCard(playlistId)
+          }
+        }
+
+        addTrack(playlistId, trackData) {
+          const editedPlaylist = this.editedPlaylists.get(playlistId)
+          if (editedPlaylist) {
+            editedPlaylist.tracks.push(trackData)
+            this.saveDrafts()
+            this.rerenderPlaylistCard(playlistId)
+          }
+        }
+
+        rerenderPlaylistCard(playlistId) {
+          const card = document.querySelector(`[data-playlist-id="${playlistId}"]`)
+          if (card) {
+            const editedPlaylist = this.editedPlaylists.get(playlistId)
+            card.remove()
+            this.renderPlaylist(editedPlaylist, true)
+            // Re-enter edit mode
+            setTimeout(() => this.toggleEditMode(playlistId), 100)
+          }
+        }
+
+        exportEditedPlaylist(playlistId) {
+          const editedPlaylist = this.editedPlaylists.get(playlistId)
+          if (editedPlaylist) {
+            const m3uContent = this.generateM3UFile(editedPlaylist)
+            const blob = new Blob([m3uContent], { type: 'text/plain' })
+            const url = URL.createObjectURL(blob)
+            
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${editedPlaylist.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_edited.m3u`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+            
+            this.showStatus(`📤 Exported edited playlist: ${editedPlaylist.name}`)
+          }
+        }
+
+        addNewTrack(playlistId) {
+          const titleInput = document.getElementById(`title-${playlistId}`)
+          const urlInput = document.getElementById(`url-${playlistId}`)
+          const groupInput = document.getElementById(`group-${playlistId}`)
+          
+          const title = titleInput.value.trim()
+          const url = urlInput.value.trim()
+          const group = groupInput.value.trim() || 'Unknown'
+          
+          if (title && url) {
+            const newTrack = {
+              title: title,
+              url: url,
+              group: group,
+              duration: -1,
+              logo: ''
+            }
+            
+            this.addTrack(playlistId, newTrack)
+            
+            // Clear form
+            titleInput.value = ''
+            urlInput.value = ''
+            groupInput.value = ''
+            
+            this.showStatus(`➕ Added track: ${title}`)
+          } else {
+            this.showStatus('❌ Please enter track title and URL')
+          }
         }
       }
 
